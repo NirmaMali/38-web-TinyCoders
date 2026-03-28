@@ -8,6 +8,15 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/errorHandler');
 
+// --- Validate required env vars early ---
+const requiredEnvVars = ['MONGODB_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
+const missing = requiredEnvVars.filter((v) => !process.env[v]);
+if (missing.length > 0) {
+  console.error('❌ Missing required environment variables:', missing.join(', '));
+  console.error('   Set them in your Render dashboard under Environment → Environment Variables');
+  process.exit(1);
+}
+
 // Route imports
 const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
@@ -25,15 +34,18 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin: function (origin, callback) {
+    // In production (same-origin), most requests have no separate origin
+    if (process.env.NODE_ENV === 'production') {
+      callback(null, true);
+      return;
+    }
     const allowedOrigins = [
       process.env.CLIENT_URL,
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
     ].filter(Boolean);
-    // Allow requests with no origin (e.g. mobile apps, curl)
-    // Also allow any *.vercel.app preview deployment
-    if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -88,7 +100,7 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 PlaceIQ Server running on port ${PORT}`);
     });
   })
