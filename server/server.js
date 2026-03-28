@@ -31,7 +31,8 @@ app.use(cors({
       'http://localhost:5175',
     ].filter(Boolean);
     // Allow requests with no origin (e.g. mobile apps, curl)
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Also allow any *.vercel.app preview deployment
+    if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
