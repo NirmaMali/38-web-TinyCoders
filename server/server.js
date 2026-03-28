@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -67,6 +68,17 @@ app.use('/api/external-jobs', externalJobRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'PlaceIQ API is running', timestamp: new Date() });
 });
+
+// --- Serve React client in production ---
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientBuildPath));
+
+  // SPA catch-all: any route not matched by API routes serves index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 // Error handler (must be last)
 app.use(errorHandler);

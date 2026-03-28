@@ -1,0 +1,13 @@
+{
+  "name": "placeiq",
+  "version": "1.0.0",
+  "description": "PlaceIQ - Full-Stack Placement Management Platform",
+  "scripts": {
+    "install:all": "cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && node server.js",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "render-build": "npm run install:all && npm run build"
+  }
+}
